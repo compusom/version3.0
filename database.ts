@@ -44,8 +44,7 @@ const db = {
         const useRemote = table !== 'config' && checkConnection();
         console.log(`[DB] Executing: SELECT * FROM ${table};`);
 
-
-        if (dbConnectionStatus.connected) {
+        if (useRemote) {
 
             try {
                 const res = await fetch(`${API_BASE}/kv/${table}`);
@@ -77,7 +76,7 @@ const db = {
         console.log(`[DB] Executing: UPDATE ${table} with new data...`);
 
 
-        if (dbConnectionStatus.connected) {
+        if (useRemote) {
 
             try {
                 const res = await fetch(`${API_BASE}/kv/${table}`, {
@@ -110,7 +109,9 @@ const db = {
         console.log(`[DB] Executing: DELETE FROM ${table};`);
 
 
+
         if (dbConnectionStatus.connected) {
+
 
             try {
                 const res = await fetch(`${API_BASE}/kv/${table}`, { method: 'DELETE' });
@@ -131,7 +132,8 @@ const db = {
         const useRemote = checkConnection();
         console.log(`[DB] Executing: CLEAR ALL USER DATA;`);
 
-        if (dbConnectionStatus.connected) {
+
+        if (useRemote) {
 
             const keysToClear = [
                 'db_clients',

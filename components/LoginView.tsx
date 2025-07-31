@@ -5,6 +5,8 @@ import { DbCredentialsModal } from './DbCredentialsModal';
 import { APP_VERSION, APP_BUILD } from '../version';
 
 
+
+
 interface LoginViewProps {
     onLogin: (user: string, pass: string) => boolean;
 }
