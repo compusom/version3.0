@@ -303,7 +303,16 @@ const App: React.FC = () => {
         const initializeApp = async () => {
             Logger.info('Application initializing...');
             setIsLoading(true);
-            dbConnectionStatus.connected = true; 
+            try {
+                const statusRes = await fetch('/api/status');
+                const status = await statusRes.json();
+                dbConnectionStatus.connected = status.connected;
+                if (!status.connected) {
+                    Logger.warn('Remote DB connection failed', status.error);
+                }
+            } catch {
+                dbConnectionStatus.connected = false;
+            }
             try {
                 const [
                     loadedUsers, loadedClients, loadedLookerData, loggedInUser,
