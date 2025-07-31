@@ -1,10 +1,11 @@
 import { Client, User, PerformanceRecord, AllLookerData, BitacoraReport, UploadedVideo, ImportBatch, MetaApiConfig, ProcessedHashes } from './types';
 
-// A simulated database client for a more realistic feel.
-// In a real-world scenario, this would be a backend API client.
-// This simulation uses localStorage as its data store.
+// Database helper that can work with either the new backend API
+// (which persists data in PostgreSQL) or fall back to localStorage
+// when no connection is available.
 
 const ARTIFICIAL_DELAY_MS = 400;
+const API_BASE = '/api';
 
 type DbConnectionStatus = {
     connected: boolean;
@@ -15,12 +16,12 @@ export const dbConnectionStatus: DbConnectionStatus = {
     connected: false,
 };
 
-const checkConnection = () => {
+const checkConnection = (): boolean => {
     if (!dbConnectionStatus.connected) {
-        const errorMsg = 'Database not connected. Please check configuration in Settings.';
-        console.error(`[DB] ${errorMsg}`);
-        throw new Error(errorMsg);
+        console.warn('[DB] Remote database not connected, using localStorage');
+        return false;
     }
+    return true;
 };
 
 const simulateQuery = <T>(action: () => T): Promise<T> => {
@@ -40,10 +41,22 @@ const simulateQuery = <T>(action: () => T): Promise<T> => {
 const db = {
     async select<T>(table: string, defaultValue: T): Promise<T> {
         // Allow reading config before connection is established
-        if (table !== 'config') {
-            checkConnection();
-        }
+        const useRemote = table !== 'config' && checkConnection();
         console.log(`[DB] Executing: SELECT * FROM ${table};`);
+        if (useRemote) {
+            try {
+                const res = await fetch(`${API_BASE}/kv/${table}`);
+                if (res.ok) {
+                    const json = await res.json();
+                    return json.value ?? defaultValue;
+                }
+                throw new Error(`HTTP ${res.status}`);
+            } catch (e) {
+                console.error(`[DB] Remote select failed for ${table}:`, e);
+                dbConnectionStatus.connected = false;
+            }
+        }
+
         return simulateQuery(() => {
             try {
                 const data = localStorage.getItem(`db_${table}`);
@@ -57,34 +70,61 @@ const db = {
 
     async update(table: string, data: any): Promise<void> {
         // Allow writing config before connection is established
-        if (table !== 'config') {
-            checkConnection();
-        }
+        const useRemote = table !== 'config' && checkConnection();
         console.log(`[DB] Executing: UPDATE ${table} with new data...`);
+
+        if (useRemote) {
+            try {
+                const res = await fetch(`${API_BASE}/kv/${table}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return;
+            } catch (e) {
+                console.error(`[DB] Remote update failed for ${table}:`, e);
+                dbConnectionStatus.connected = false;
+            }
+        }
+
         return simulateQuery(() => {
-             try {
+            try {
                 localStorage.setItem(`db_${table}`, JSON.stringify(data));
             } catch (e) {
                 console.error(`[DB] Error writing to table ${table}:`, e);
-                if (e instanceof DOMException && (e.name === 'QuotaExceededError' || e.code === 22)) {
-                    alert(`Error: El almacenamiento está lleno. No se pudieron guardar los datos en la tabla "${table}". Libere espacio desde el Panel de Control.`);
+                if (e instanceof DOMException && (e.name === 'QuotaExceededError' || (e as any).code === 22)) {
+                    alert(`Error: El almacenamiento est\xE1 lleno. No se pudieron guardar los datos en la tabla \"${table}\". Libere espacio desde el Panel de Control.`);
                 }
             }
         });
     },
 
     async clearTable(table: string): Promise<void> {
-        checkConnection();
+        const useRemote = checkConnection();
         console.log(`[DB] Executing: DELETE FROM ${table};`);
+
+        if (useRemote) {
+            try {
+                const res = await fetch(`${API_BASE}/kv/${table}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return;
+            } catch (e) {
+                console.error(`[DB] Remote clear failed for ${table}:`, e);
+                dbConnectionStatus.connected = false;
+            }
+        }
+
         return simulateQuery(() => {
             localStorage.removeItem(`db_${table}`);
         });
     },
 
     async clearAllData(): Promise<void> {
-        checkConnection();
+        const useRemote = checkConnection();
         console.log(`[DB] Executing: CLEAR ALL USER DATA;`);
-        return simulateQuery(() => {
+
+        if (useRemote) {
             const keysToClear = [
                 'db_clients',
                 'db_users',
@@ -97,9 +137,31 @@ const db = {
                 'current_client_id',
                 'logged_in_user'
             ];
-            
+            for (const key of keysToClear) {
+                try {
+                    await fetch(`${API_BASE}/kv/${key}`, { method: 'DELETE' });
+                } catch (e) {
+                    console.warn(`[DB] Failed clearing ${key} remotely`, e);
+                }
+            }
+        }
+
+        return simulateQuery(() => {
+            const keysToClear = [
+                'db_clients',
+                'db_users',
+                'db_performance_data',
+                'db_looker_data',
+                'db_bitacora_reports',
+                'db_uploaded_videos',
+                'db_import_history',
+                'db_processed_files_hashes',
+                'current_client_id',
+                'logged_in_user'
+            ];
+
             keysToClear.forEach(key => localStorage.removeItem(key));
-            
+
             // Clear all analysis cache keys
             Object.keys(localStorage).forEach(key => {
                  if (key.startsWith('metaAdCreativeAnalysis_')) {
@@ -112,6 +174,14 @@ const db = {
     async factoryReset(): Promise<void> {
         // No connection check needed for a full reset
         console.log(`[DB] Executing: FACTORY RESET;`);
+
+        if (dbConnectionStatus.connected) {
+            try {
+                const res = await fetch(`${API_BASE}/kv/clients`, { method: 'DELETE' });
+                // ignore result
+            } catch {}
+        }
+
         return simulateQuery(() => {
             localStorage.clear();
         });
