@@ -43,7 +43,10 @@ const db = {
         // Allow reading config before connection is established
         const useRemote = table !== 'config' && checkConnection();
         console.log(`[DB] Executing: SELECT * FROM ${table};`);
-        if (useRemote) {
+
+
+        if (dbConnectionStatus.connected) {
+
             try {
                 const res = await fetch(`${API_BASE}/kv/${table}`);
                 if (res.ok) {
@@ -73,7 +76,9 @@ const db = {
         const useRemote = table !== 'config' && checkConnection();
         console.log(`[DB] Executing: UPDATE ${table} with new data...`);
 
-        if (useRemote) {
+
+        if (dbConnectionStatus.connected) {
+
             try {
                 const res = await fetch(`${API_BASE}/kv/${table}`, {
                     method: 'POST',
@@ -104,7 +109,9 @@ const db = {
         const useRemote = checkConnection();
         console.log(`[DB] Executing: DELETE FROM ${table};`);
 
-        if (useRemote) {
+
+        if (dbConnectionStatus.connected) {
+
             try {
                 const res = await fetch(`${API_BASE}/kv/${table}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -124,7 +131,8 @@ const db = {
         const useRemote = checkConnection();
         console.log(`[DB] Executing: CLEAR ALL USER DATA;`);
 
-        if (useRemote) {
+        if (dbConnectionStatus.connected) {
+
             const keysToClear = [
                 'db_clients',
                 'db_users',
