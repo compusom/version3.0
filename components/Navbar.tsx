@@ -1,5 +1,6 @@
 import React from 'react';
 import { AppView, User } from '../types';
+import { APP_VERSION, APP_BUILD } from '../version';
 
 interface NavbarProps {
     currentView: AppView;
@@ -42,7 +43,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, current
             </div>
 
             <div className="flex items-center gap-4">
-                {/* User Info & Logout */}
+                <span className="text-xs text-brand-text-secondary">v{APP_VERSION} build {APP_BUILD}</span>
                 <div className="flex items-center gap-3">
                     <span className="text-sm text-brand-text-secondary">
                         Usuario: <span className="font-bold text-brand-text">{currentUser.username}</span>
