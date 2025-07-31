@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { DbCredentialsModal } from './DbCredentialsModal';
 
+import { APP_VERSION, APP_BUILD } from '../version';
+
+
 interface LoginViewProps {
     onLogin: (user: string, pass: string) => boolean;
 }
@@ -130,6 +133,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                         </button>
                     </div>
                 </form>
+                <p className="mt-4 text-xs text-brand-text-secondary text-center">v{APP_VERSION} build {APP_BUILD}</p>
             </div>
         </div>
     );
