@@ -16,12 +16,12 @@ export const dbConnectionStatus: DbConnectionStatus = {
     connected: false,
 };
 
-const checkConnection = () => {
+const checkConnection = (): boolean => {
     if (!dbConnectionStatus.connected) {
-        const errorMsg = 'Database not connected. Please check configuration in Settings.';
-        console.error(`[DB] ${errorMsg}`);
-        throw new Error(errorMsg);
+        console.warn('[DB] Remote database not connected, using localStorage');
+        return false;
     }
+    return true;
 };
 
 const simulateQuery = <T>(action: () => T): Promise<T> => {
@@ -41,12 +41,12 @@ const simulateQuery = <T>(action: () => T): Promise<T> => {
 const db = {
     async select<T>(table: string, defaultValue: T): Promise<T> {
         // Allow reading config before connection is established
-        if (table !== 'config') {
-            checkConnection();
-        }
+        const useRemote = table !== 'config' && checkConnection();
         console.log(`[DB] Executing: SELECT * FROM ${table};`);
 
+
         if (dbConnectionStatus.connected) {
+
             try {
                 const res = await fetch(`${API_BASE}/kv/${table}`);
                 if (res.ok) {
@@ -73,12 +73,12 @@ const db = {
 
     async update(table: string, data: any): Promise<void> {
         // Allow writing config before connection is established
-        if (table !== 'config') {
-            checkConnection();
-        }
+        const useRemote = table !== 'config' && checkConnection();
         console.log(`[DB] Executing: UPDATE ${table} with new data...`);
 
+
         if (dbConnectionStatus.connected) {
+
             try {
                 const res = await fetch(`${API_BASE}/kv/${table}`, {
                     method: 'POST',
@@ -106,10 +106,12 @@ const db = {
     },
 
     async clearTable(table: string): Promise<void> {
-        checkConnection();
+        const useRemote = checkConnection();
         console.log(`[DB] Executing: DELETE FROM ${table};`);
 
+
         if (dbConnectionStatus.connected) {
+
             try {
                 const res = await fetch(`${API_BASE}/kv/${table}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -126,10 +128,11 @@ const db = {
     },
 
     async clearAllData(): Promise<void> {
-        checkConnection();
+        const useRemote = checkConnection();
         console.log(`[DB] Executing: CLEAR ALL USER DATA;`);
 
         if (dbConnectionStatus.connected) {
+
             const keysToClear = [
                 'db_clients',
                 'db_users',
