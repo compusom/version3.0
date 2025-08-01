@@ -11,6 +11,8 @@ export const DbConnectionView: React.FC = () => {
     const [testing, setTesting] = useState(false);
     const [ftpConnected, setFtpConnected] = useState<boolean | null>(null);
     const [ftpError, setFtpError] = useState('');
+    const [dbCreds, setDbCreds] = useState<{ host: string; database: string; user: string } | null>(null);
+    const [ftpCreds, setFtpCredsState] = useState<{ host: string; port: number; user: string } | null>(null);
 
     useEffect(() => {
         fetch('/api/server-ip')
@@ -18,6 +20,18 @@ export const DbConnectionView: React.FC = () => {
             .then(d => setPublicIp(d.ip))
             .catch(() => setPublicIp('Desconocida'));
         checkStatus();
+        fetch('/api/get-credentials')
+            .then(r => r.json())
+            .then(c => {
+                if (c.host) setDbCreds(c);
+            })
+            .catch(() => {});
+        fetch('/api/get-ftp-credentials')
+            .then(r => r.json())
+            .then(c => {
+                if (c.host) setFtpCredsState({ host: c.host, port: c.port, user: c.user });
+            })
+            .catch(() => {});
     }, []);
 
     const checkStatus = async () => {
@@ -59,6 +73,7 @@ export const DbConnectionView: React.FC = () => {
             if (data.success) {
                 setDbConnected(true);
                 setDbError('');
+                setDbCreds({ host: c.host, database: c.database, user: c.user });
             } else {
                 setDbConnected(false);
                 setDbError(data.error || 'Error');
@@ -83,6 +98,7 @@ export const DbConnectionView: React.FC = () => {
             if (r.ok) {
                 setFtpConnected(true);
                 setFtpError('');
+                setFtpCredsState({ host: c.host, port: parseInt(c.port), user: c.user });
             } else {
                 const d = await r.json();
                 setFtpConnected(false);
@@ -110,6 +126,12 @@ export const DbConnectionView: React.FC = () => {
                 {dbConnected === false && <p className="text-xs text-red-400">{dbError}</p>}
                 {ftpConnected === false && <p className="text-xs text-red-400">FTP: {ftpError}</p>}
                 {ftpConnected && <p className="text-xs text-green-500">FTP conectado</p>}
+                {dbCreds && (
+                    <p className="text-xs text-brand-text-secondary">DB: {dbCreds.host} / {dbCreds.database} ({dbCreds.user})</p>
+                )}
+                {ftpCreds && (
+                    <p className="text-xs text-brand-text-secondary">FTP: {ftpCreds.host}:{ftpCreds.port} ({ftpCreds.user})</p>
+                )}
             </div>
             <div className="mt-6 flex gap-4">
                 <button
