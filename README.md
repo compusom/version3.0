@@ -17,7 +17,9 @@ This contains everything you need to run your app locally.
    `npm run dev`
    If the PostgreSQL server is unreachable, the app falls back to local storage automatically.
 
+
 4. Login is disabled in development; the app automatically signs in with the first user (default `Admin`/`Admin`).
+
 5. If the SQL connection fails you can update the credentials from the **Conexión a SQL** screen located in the **Control Panel**.
 
 ## Reset Data
