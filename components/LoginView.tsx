@@ -20,6 +20,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
     const [dbError, setDbError] = useState('');
     const [showCreds, setShowCreds] = useState(false);
     const [showFtpCreds, setShowFtpCreds] = useState(false);
+    const [ftpConnected, setFtpConnected] = useState<boolean | null>(null);
+    const [ftpError, setFtpError] = useState('');
 
     useEffect(() => {
         fetch('/api/server-ip')
@@ -39,6 +41,21 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
         } catch (e) {
             setDbConnected(false);
             setDbError('No se pudo conectar con la API.');
+        }
+
+        try {
+            const res = await fetch('/api/test-ftp');
+            if (res.ok) {
+                setFtpConnected(true);
+                setFtpError('');
+            } else {
+                const d = await res.json();
+                setFtpConnected(false);
+                setFtpError(d.error || 'Error');
+            }
+        } catch (e) {
+            setFtpConnected(false);
+            setFtpError('No se pudo conectar al FTP.');
         }
     };
 
@@ -72,6 +89,15 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(c)
             });
+            const res = await fetch('/api/test-ftp');
+            if (res.ok) {
+                setFtpConnected(true);
+                setFtpError('');
+            } else {
+                const d = await res.json();
+                setFtpConnected(false);
+                setFtpError(d.error || 'Error');
+            }
         } finally {
             setShowFtpCreds(false);
         }
@@ -116,6 +142,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                         </div>
                     )}
                     {dbConnected && <p className="text-xs text-green-500 mt-2">DB conectada</p>}
+                    {ftpConnected === false && (
+                        <div className="text-red-400 text-xs mt-2">Error FTP: {ftpError}</div>
+                    )}
+                    {ftpConnected && <p className="text-xs text-green-500 mt-1">FTP conectado</p>}
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
