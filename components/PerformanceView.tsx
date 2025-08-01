@@ -326,7 +326,7 @@ export const PerformanceView: React.FC<PerformanceViewProps> = ({ clients, getPe
             if (isVideo) {
                  const uploadedVideo = uploadedVideos.find(v => v.clientId === selectedClient.id && v.adName === ad.adName);
                  if (!uploadedVideo) throw new Error("No se encontró el archivo de video subido.");
-                 const response = await fetch(uploadedVideo.dataUrl);
+                const response = await fetch(`/api/ftp-file/${uploadedVideo.remotePath}`);
                  const blob = await response.blob();
                  file = new File([blob], uploadedVideo.videoFileName, { type: blob.type });
             } else {
@@ -459,8 +459,18 @@ export const PerformanceView: React.FC<PerformanceViewProps> = ({ clients, getPe
     const handleVideoSave = async (adName: string, videoFile: File) => {
         if (!selectedClient) return;
         try {
-            const dataUrl = await fileToBase64(videoFile);
-            const newVideo: UploadedVideo = { id: `${selectedClient.id}_${adName}`, clientId: selectedClient.id, adName: adName, videoFileName: videoFile.name, dataUrl: dataUrl };
+            const formData = new FormData();
+            formData.append('file', videoFile);
+            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Error');
+            const newVideo: UploadedVideo = {
+                id: `${selectedClient.id}_${adName}`,
+                clientId: selectedClient.id,
+                adName: adName,
+                videoFileName: videoFile.name,
+                remotePath: data.path
+            };
             const updatedVideos = [...uploadedVideos.filter(v => v.id !== newVideo.id), newVideo];
             setUploadedVideos(updatedVideos);
         } catch (error) {

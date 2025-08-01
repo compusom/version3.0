@@ -20,7 +20,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
     const [showCreds, setShowCreds] = useState(false);
 
     useEffect(() => {
-        fetch('https://api.ipify.org?format=json')
+        fetch('/api/server-ip')
             .then(r => r.json())
             .then(d => setPublicIp(d.ip))
             .catch(() => setPublicIp('Desconocida'));

@@ -2,7 +2,19 @@ import { Type } from "@google/genai";
 
 export type Language = 'es' | 'en';
 
-export type AppView = 'creative_analysis' | 'performance' | 'strategies' | 'reports' | 'clients' | 'import' | 'users' | 'logs' | 'control_panel' | 'help' | 'settings';
+export type AppView =
+  | 'creative_analysis'
+  | 'performance'
+  | 'strategies'
+  | 'reports'
+  | 'clients'
+  | 'import'
+  | 'users'
+  | 'logs'
+  | 'control_panel'
+  | 'db_connection'
+  | 'help'
+  | 'settings';
 
 export enum Severity {
     CRITICAL = 'CRITICAL',
@@ -393,7 +405,7 @@ export interface UploadedVideo {
     clientId: string;
     adName: string;
     videoFileName: string;
-    dataUrl: string;
+    remotePath: string;
 }
 
 export type ImportSource = 'looker' | 'meta' | 'txt' | 'api';
