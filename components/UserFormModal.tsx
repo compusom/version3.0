@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { User } from '../types';
 import { Modal } from './Modal';
 
@@ -38,7 +39,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({ isOpen, onClose, o
         }
 
         const userData: User = {
-            id: initialData?.id || crypto.randomUUID(),
+            id: initialData?.id || uuidv4(),
             username: username.trim(),
             password: password.trim() || initialData!.password, // Use new password if provided, otherwise keep old
             role: role,

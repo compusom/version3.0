@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { Client, User } from '../types';
 import { Modal } from './Modal';
 
@@ -65,7 +66,7 @@ export const ClientFormModal: React.FC<ClientFormModalProps> = ({ isOpen, onClos
         }
         
         const clientData: Client = {
-            id: initialData?.id || crypto.randomUUID(),
+            id: initialData?.id || uuidv4(),
             name: name.trim(),
             logo: logoUrl,
             currency: currency.trim().toUpperCase(),

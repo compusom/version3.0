@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { Client, PerformanceRecord, AllLookerData, BitacoraReport, ImportBatch, MetaApiConfig, User, LookerProcessResult, ProcessResult } from '../types';
 import { NewClientsModal } from './NewClientsModal';
 import { dbTyped } from '../database';
@@ -80,7 +81,7 @@ export const ImportView: React.FC<ImportViewProps> = ({ clients, setClients, loo
     }, []);
 
     const addImportToHistory = async (batch: Omit<ImportBatch, 'id' | 'timestamp'>) => {
-        const newBatch: ImportBatch = { ...batch, id: crypto.randomUUID(), timestamp: new Date().toISOString() };
+        const newBatch: ImportBatch = { ...batch, id: uuidv4(), timestamp: new Date().toISOString() };
         setImportHistory(prev => [newBatch, ...prev]);
         await dbTyped.saveImportHistory([newBatch, ...importHistory]);
     };
@@ -260,7 +261,7 @@ export const ImportView: React.FC<ImportViewProps> = ({ clients, setClients, loo
             }
 
             const parsedReport = parseBitacoraReport(pendingTxtData.content);
-            const reportId = crypto.randomUUID();
+            const reportId = uuidv4();
             const finalReport: BitacoraReport = { ...parsedReport, id: reportId, clientId, fileName: pendingTxtData.file.name, importDate: new Date().toISOString() };
             
             setBitacoraReports([...bitacoraReports, finalReport]);
@@ -284,7 +285,7 @@ export const ImportView: React.FC<ImportViewProps> = ({ clients, setClients, loo
 
     const handleCreateNewClients = async (accountsToCreate: string[]) => {
         const newClients: Client[] = accountsToCreate.map(accountName => ({
-            id: crypto.randomUUID(),
+            id: uuidv4(),
             name: accountName,
             logo: `https://avatar.vercel.sh/${encodeURIComponent(accountName)}.png?text=${encodeURIComponent(accountName.charAt(0))}`,
             currency: 'EUR', // Default currency
