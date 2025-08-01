@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { DbCredentialsModal } from './DbCredentialsModal';
 
+import { APP_VERSION, APP_BUILD } from '../version';
+
+
 export const DbConnectionView: React.FC = () => {
     const [publicIp, setPublicIp] = useState('');
     const [dbConnected, setDbConnected] = useState<boolean | null>(null);
@@ -82,6 +85,8 @@ export const DbConnectionView: React.FC = () => {
                     Editar Credenciales
                 </button>
             </div>
+            <p className="mt-6 text-xs text-brand-text-secondary text-center">v{APP_VERSION} build {APP_BUILD}</p>
+
         </div>
     );
 };

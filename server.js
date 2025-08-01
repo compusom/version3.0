@@ -2,11 +2,29 @@ import express from 'express';
 import { Client } from 'pg';
 import https from 'https';
 
+
 const app = express();
 app.use(express.json());
+const upload = multer({ storage: multer.memoryStorage() });
+
+const ftpConfig = {
+  host: process.env.FTP_HOST || 'ftp.pulseweb.com.ar',
+  port: process.env.FTP_PORT ? parseInt(process.env.FTP_PORT, 10) : 21,
+  user: process.env.FTP_USER,
+  password: process.env.FTP_PASS
+};
 
 let dbClient = null;
 let connectionError = null;
+
+
+async function uploadToFtp(filename, buffer) {
+  const client = new FtpClient();
+  await client.access(ftpConfig);
+  await client.uploadFrom(Buffer.from(buffer), filename);
+  await client.close();
+}
+
 
 function fetchPublicIp() {
   return new Promise((resolve, reject) => {
@@ -62,9 +80,9 @@ async function connectToDb(config) {
 
 await connectToDb({
   host: process.env.DB_HOST || 'Pulseweb.com.ar',
-  database: process.env.DB_NAME || 'dbzonjl9ktp0wu',
-  user: process.env.DB_USER || 'uizkbuhryctw3',
-  password: process.env.DB_PASS || 'Cataclismoss'
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS
 });
 
 app.get('/api/status', (req, res) => {
@@ -123,6 +141,38 @@ app.delete('/api/kv/:key', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  if (!ftpConfig.user || !ftpConfig.password) {
+    return res.status(500).json({ error: 'FTP credentials not configured' });
+  }
+  const uniqueName = `${Date.now()}_${req.file.originalname.replace(/\s+/g, '_')}`;
+  try {
+    await uploadToFtp(uniqueName, req.file.buffer);
+    res.json({ path: uniqueName });
+  } catch (err) {
+    console.error('FTP upload failed:', err.message);
+    res.status(500).json({ error: 'FTP upload failed' });
+  }
+});
+
+app.get('/api/ftp-file/:name', async (req, res) => {
+  if (!ftpConfig.user || !ftpConfig.password) {
+    return res.status(500).send('FTP credentials not configured');
+  }
+  const remotePath = req.params.name;
+  const client = new FtpClient();
+  try {
+    await client.access(ftpConfig);
+    res.type(path.extname(remotePath));
+    await client.downloadTo(res, remotePath);
+    await client.close();
+  } catch (err) {
+    console.error('FTP download failed:', err.message);
+    res.status(500).send('FTP download failed');
   }
 });
 

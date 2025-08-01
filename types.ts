@@ -405,7 +405,7 @@ export interface UploadedVideo {
     clientId: string;
     adName: string;
     videoFileName: string;
-    dataUrl: string;
+    remotePath: string;
 }
 
 export type ImportSource = 'looker' | 'meta' | 'txt' | 'api';
