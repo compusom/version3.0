@@ -9,6 +9,8 @@ export const DbConnectionView: React.FC = () => {
     const [showCreds, setShowCreds] = useState(false);
     const [showFtpCreds, setShowFtpCreds] = useState(false);
     const [testing, setTesting] = useState(false);
+    const [ftpConnected, setFtpConnected] = useState<boolean | null>(null);
+    const [ftpError, setFtpError] = useState('');
 
     useEffect(() => {
         fetch('/api/server-ip')
@@ -28,6 +30,20 @@ export const DbConnectionView: React.FC = () => {
         } catch (e) {
             setDbConnected(false);
             setDbError('No se pudo conectar con la API.');
+        }
+        try {
+            const r = await fetch('/api/test-ftp');
+            if (r.ok) {
+                setFtpConnected(true);
+                setFtpError('');
+            } else {
+                const d = await r.json();
+                setFtpConnected(false);
+                setFtpError(d.error || 'Error');
+            }
+        } catch (e) {
+            setFtpConnected(false);
+            setFtpError('No se pudo conectar al FTP.');
         }
         setTesting(false);
     };
@@ -62,6 +78,17 @@ export const DbConnectionView: React.FC = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(c)
             });
+
+            const r = await fetch('/api/test-ftp');
+            if (r.ok) {
+                setFtpConnected(true);
+                setFtpError('');
+            } else {
+                const d = await r.json();
+                setFtpConnected(false);
+                setFtpError(d.error || 'Error');
+            }
+
         } finally {
             setShowFtpCreds(false);
         }
@@ -81,6 +108,8 @@ export const DbConnectionView: React.FC = () => {
                     {dbConnected === false && <span className="text-red-400">Desconectado</span>}
                 </div>
                 {dbConnected === false && <p className="text-xs text-red-400">{dbError}</p>}
+                {ftpConnected === false && <p className="text-xs text-red-400">FTP: {ftpError}</p>}
+                {ftpConnected && <p className="text-xs text-green-500">FTP conectado</p>}
             </div>
             <div className="mt-6 flex gap-4">
                 <button

@@ -3,7 +3,7 @@ import { Client } from 'pg';
 import https from 'https';
 import multer from 'multer';
 import fs from 'fs';
-import { setFtpCredentials, uploadFile } from './lib/ftpClient.ts';
+import { setFtpCredentials, uploadFile, checkFtpConnection } from './lib/ftpClient.ts';
 
 const app = express();
 app.use(express.json());
@@ -98,6 +98,21 @@ app.post('/api/set-ftp-credentials', (req, res) => {
   ftpConfig = { host, port: port ? parseInt(port) : 21, user, password };
   setFtpCredentials(ftpConfig);
   res.json({ success: true });
+});
+
+app.get('/api/get-ftp-credentials', (req, res) => {
+  if (!ftpConfig.host) return res.json({});
+  const { password, ...safe } = ftpConfig;
+  res.json(safe);
+});
+
+app.get('/api/test-ftp', async (req, res) => {
+  try {
+    await checkFtpConnection();
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
 });
 
 app.get('/api/server-ip', async (req, res) => {
