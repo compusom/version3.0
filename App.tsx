@@ -16,6 +16,7 @@ import { HelpView } from './components/HelpView';
 import { LogView } from './components/LogView';
 import { TrendsView } from './components/TrendsView';
 import { ReportsView } from './components/ReportsView';
+import { DbConnectionView } from './components/DbConnectionView';
 import { dbTyped, dbConnectionStatus } from './database';
 import Logger from './Logger';
 import { syncFromMetaAPI } from './lib/metaApiConnector';
@@ -687,6 +688,7 @@ ${demographicSummary || '  - No disponible'}
                 {mainView === 'reports' && <ReportsView clients={visibleClients} lookerData={lookerData} bitacoraReports={bitacoraReports} />}
                 {mainView === 'settings' && <SettingsView metaApiConfig={metaApiConfig} setMetaApiConfig={setMetaApiConfig} />}
                 {mainView === 'control_panel' && currentUser?.role === 'admin' && <ControlPanelView />}
+                {mainView === 'db_connection' && currentUser?.role === 'admin' && <DbConnectionView />}
                 {mainView === 'clients' && <ClientManager clients={clients} setClients={setClients} currentUser={currentUser!} />}
                 {mainView === 'import' && currentUser?.role === 'admin' && <ImportView clients={clients} setClients={setClients} lookerData={lookerData} setLookerData={setLookerData} performanceData={performanceData} setPerformanceData={setPerformanceData} bitacoraReports={bitacoraReports} setBitacoraReports={setBitacoraReports} onSyncFromMeta={handleSyncFromMeta} metaApiConfig={metaApiConfig} currentUser={currentUser} />}
                 {mainView === 'users' && currentUser?.role === 'admin' && <UserManager users={users} setUsers={setUsers} currentUser={currentUser!} />}
