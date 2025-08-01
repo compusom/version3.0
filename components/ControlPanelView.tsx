@@ -125,10 +125,22 @@ export const ControlPanelView: React.FC = () => {
                     </pre>
                 </div>
             </div>
-            
+
             <div className="border-t-2 border-red-500/30 pt-6 space-y-4">
                 <h3 className="text-xl font-bold text-red-400">Zona de Peligro</h3>
-                 <div className="bg-red-600/10 p-4 rounded-md flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="bg-red-600/10 p-4 rounded-md flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div>
+                        <h4 className="font-semibold text-red-400">Reiniciar Cache de Importación</h4>
+                        <p className="text-sm text-brand-text-secondary mt-1">Elimina el historial de archivos importados para permitir subirlos nuevamente.</p>
+                    </div>
+                    <button
+                        onClick={async () => { await db.clearTable('processed_files_hashes'); addLog('✅ Cache de importación reiniciada.'); }}
+                        className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors flex-shrink-0"
+                    >
+                        Reiniciar Cache
+                    </button>
+                </div>
+                <div className="bg-red-600/10 p-4 rounded-md flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div>
                         <h4 className="font-semibold text-red-400">Factory Reset</h4>
                         <p className="text-sm text-brand-text-secondary mt-1">

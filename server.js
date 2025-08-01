@@ -3,7 +3,7 @@ import { Client } from 'pg';
 import https from 'https';
 import multer from 'multer';
 import fs from 'fs';
-import { setFtpCredentials, uploadFile } from './lib/ftpClient.ts';
+import { setFtpCredentials, uploadFile, checkFtpConnection } from './lib/ftpClient.ts';
 
 const app = express();
 app.use(express.json());
@@ -100,6 +100,21 @@ app.post('/api/set-ftp-credentials', (req, res) => {
   res.json({ success: true });
 });
 
+app.get('/api/get-ftp-credentials', (req, res) => {
+  if (!ftpConfig.host) return res.json({});
+  const { password, ...safe } = ftpConfig;
+  res.json(safe);
+});
+
+app.get('/api/test-ftp', async (req, res) => {
+  try {
+    await checkFtpConnection();
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, error: e.message });
+  }
+});
+
 app.get('/api/server-ip', async (req, res) => {
   try {
     if (!serverIp) {
@@ -142,6 +157,16 @@ app.delete('/api/kv/:key', async (req, res) => {
   const { key } = req.params;
   try {
     await dbClient.query('DELETE FROM kv_store WHERE key=$1', [key]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/factory-reset', async (req, res) => {
+  if (!dbClient) return res.status(500).json({ error: 'DB not connected' });
+  try {
+    await dbClient.query('DELETE FROM kv_store');
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
