@@ -54,7 +54,7 @@ const CLEAR_ALL_KEYS = [
 const db = {
     async select<T>(table: string, defaultValue: T): Promise<T> {
         // Allow reading config before connection is established
-        const useRemote = table !== 'config' && checkConnection();
+        table !== 'config' && checkConnection();
         console.log(`[DB] Executing: SELECT * FROM ${table};`);
 
 
@@ -86,7 +86,7 @@ const db = {
 
     async update(table: string, data: any): Promise<void> {
         // Allow writing config before connection is established
-        const useRemote = table !== 'config' && checkConnection();
+        table !== 'config' && checkConnection();
         console.log(`[DB] Executing: UPDATE ${table} with new data...`);
 
 
@@ -119,7 +119,7 @@ const db = {
     },
 
     async clearTable(table: string): Promise<void> {
-        const useRemote = checkConnection();
+        checkConnection();
         console.log(`[DB] Executing: DELETE FROM ${table};`);
 
 
