@@ -3,6 +3,7 @@ import { Client } from 'pg';
 import https from 'https';
 import multer from 'multer';
 import fs from 'fs';
+import path from 'path';
 
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
@@ -13,6 +14,29 @@ import { setFtpCredentials, uploadFile, checkFtpConnection } from './lib/ftpClie
 const app = express();
 app.use(express.json());
 const upload = multer({ dest: 'uploads/' });
+
+function saveEnvVars(vars) {
+  const envPath = path.resolve('.env.local');
+  let existing = {};
+  if (fs.existsSync(envPath)) {
+    const lines = fs.readFileSync(envPath, 'utf8').split('\n');
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const idx = line.indexOf('=');
+      if (idx === -1) continue;
+      const key = line.slice(0, idx);
+      const value = line.slice(idx + 1);
+      existing[key] = value;
+    }
+  }
+  for (const [k, v] of Object.entries(vars)) {
+    existing[k] = v;
+  }
+  const out = Object.entries(existing)
+    .map(([k, v]) => `${k}=${v}`)
+    .join('\n');
+  fs.writeFileSync(envPath, out);
+}
 
 let ftpConfig = {
   host: process.env.FTP_HOST || null,
@@ -96,14 +120,24 @@ app.post('/api/set-credentials', async (req, res) => {
   const { host, database, user, password } = req.body;
   dbConfig = { host, database, user, password };
   await connectToDb(dbConfig);
-  if (dbClient) res.json({ success: true });
-  else res.status(500).json({ success: false, error: connectionError });
+  if (dbClient) {
+    saveEnvVars({ DB_HOST: host, DB_NAME: database, DB_USER: user, DB_PASS: password });
+    res.json({ success: true });
+  } else {
+    res.status(500).json({ success: false, error: connectionError });
+  }
 });
 
 app.post('/api/set-ftp-credentials', (req, res) => {
   const { host, port, user, password } = req.body;
   ftpConfig = { host, port: port ? parseInt(port) : 21, user, password };
   setFtpCredentials(ftpConfig);
+  saveEnvVars({
+    FTP_HOST: host,
+    FTP_PORT: String(ftpConfig.port),
+    FTP_USER: user,
+    FTP_PASS: password
+  });
   res.json({ success: true });
 });
 
