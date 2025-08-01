@@ -9,7 +9,7 @@ This contains everything you need to run your app locally.
 
 1. Install dependencies:
    `npm install`
-2. Copy `.env.example` to `.env.local` and update the values. At a minimum you
+2. Copy `.env.example` to `.env` (or `.env.local`) and update the values. At a minimum you
    should provide your `GEMINI_API_KEY` and the PostgreSQL connection settings
    (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`).
 
