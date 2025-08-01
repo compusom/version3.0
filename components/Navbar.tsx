@@ -21,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, current
         { view: 'users', label: 'Usuarios', adminOnly: true },
         { view: 'logs', label: 'Logs', adminOnly: true },
         { view: 'control_panel', label: 'Panel de Control', adminOnly: true },
+        { view: 'db_connection', label: 'Base de Datos', adminOnly: true },
         { view: 'help', label: 'Ayuda', adminOnly: false },
         { view: 'settings', label: 'Configuración', adminOnly: false },
     ];

@@ -1,11 +1,43 @@
 import express from 'express';
 import { Client } from 'pg';
+import https from 'https';
 
 const app = express();
 app.use(express.json());
 
 let dbClient = null;
 let connectionError = null;
+
+function fetchPublicIp() {
+  return new Promise((resolve, reject) => {
+    https
+      .get('https://api.ipify.org?format=json', res => {
+        let data = '';
+        res.on('data', chunk => {
+          data += chunk;
+        });
+        res.on('end', () => {
+          try {
+            const ip = JSON.parse(data).ip;
+            resolve(ip);
+          } catch (e) {
+            reject(e);
+          }
+        });
+      })
+      .on('error', err => reject(err));
+  });
+}
+
+let serverIp = null;
+fetchPublicIp()
+  .then(ip => {
+    serverIp = ip;
+    console.log('Public IP:', ip);
+  })
+  .catch(err => {
+    console.error('Error fetching IP:', err);
+  });
 
 async function connectToDb(config) {
   const client = new Client({
@@ -44,6 +76,17 @@ app.post('/api/set-credentials', async (req, res) => {
   await connectToDb({ host, database, user, password });
   if (dbClient) res.json({ success: true });
   else res.status(500).json({ success: false, error: connectionError });
+});
+
+app.get('/api/server-ip', async (req, res) => {
+  try {
+    if (!serverIp) {
+      serverIp = await fetchPublicIp();
+    }
+    res.json({ ip: serverIp });
+  } catch (e) {
+    res.status(500).json({ error: 'Error fetching IP' });
+  }
 });
 
 app.get('/api/kv/:key', async (req, res) => {
