@@ -23,6 +23,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
     const [ftpConnected, setFtpConnected] = useState<boolean | null>(null);
     const [ftpError, setFtpError] = useState('');
 
+
     useEffect(() => {
         fetch('/api/server-ip')
             .then(r => r.json())
@@ -89,6 +90,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(c)
             });
+
             const res = await fetch('/api/test-ftp');
             if (res.ok) {
                 setFtpConnected(true);
@@ -98,6 +100,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                 setFtpConnected(false);
                 setFtpError(d.error || 'Error');
             }
+
         } finally {
             setShowFtpCreds(false);
         }
