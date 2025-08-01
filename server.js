@@ -3,9 +3,11 @@ import { Client } from 'pg';
 import https from 'https';
 import multer from 'multer';
 import fs from 'fs';
+
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 dotenv.config();
+
 import { setFtpCredentials, uploadFile, checkFtpConnection } from './lib/ftpClient.js';
 
 const app = express();
