@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { GoogleGenAI, Type } from '@google/genai';
 import { AppView, Placement, Creative, AnalysisResult, FormatGroup, Language, CreativeSet, Client, AggregatedAdPerformance, User, AllLookerData, PerformanceRecord, TrendsAnalysisResult, TrendCardData, MetaApiConfig, BitacoraReport, UploadedVideo, ImportBatch, ProcessResult } from './types';
 import { PLACEMENTS, META_ADS_GUIDELINES } from './constants';
@@ -325,7 +326,7 @@ const App: React.FC = () => {
                 if (usersList.length === 0) {
                     Logger.warn('No users found in DB. Creating default Admin user.');
                     const defaultAdmin: User = {
-                        id: crypto.randomUUID(),
+                        id: uuidv4(),
                         username: 'Admin',
                         password: 'Admin',
                         role: 'admin'
@@ -622,7 +623,7 @@ ${demographicSummary || '  - No disponible'}
                         undoData: { type: 'meta', keys: undoKeys, clientId: processedClient.id } 
                     };
                     const history = await dbTyped.getImportHistory();
-                    await dbTyped.saveImportHistory([{ ...newBatch, id: crypto.randomUUID(), timestamp: new Date().toISOString(), fileHash: `api_sync_${Date.now()}` }, ...history]);
+                    await dbTyped.saveImportHistory([{ ...newBatch, id: uuidv4(), timestamp: new Date().toISOString(), fileHash: `api_sync_${Date.now()}` }, ...history]);
                     setImportHistory(await dbTyped.getImportHistory());
                 }
             }
