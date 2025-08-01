@@ -1,9 +1,7 @@
 import express from 'express';
 import { Client } from 'pg';
 import https from 'https';
-import multer from 'multer';
-import { Client as FtpClient } from 'basic-ftp';
-import path from 'path';
+
 
 const app = express();
 app.use(express.json());
@@ -19,12 +17,14 @@ const ftpConfig = {
 let dbClient = null;
 let connectionError = null;
 
+
 async function uploadToFtp(filename, buffer) {
   const client = new FtpClient();
   await client.access(ftpConfig);
   await client.uploadFrom(Buffer.from(buffer), filename);
   await client.close();
 }
+
 
 function fetchPublicIp() {
   return new Promise((resolve, reject) => {
