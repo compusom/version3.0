@@ -9,7 +9,6 @@ import { SettingsView } from './components/SettingsView';
 import { ControlPanelView } from './components/ControlPanelView';
 import { ClientManager } from './components/ClientManager';
 import { PerformanceView } from './components/PerformanceView';
-import { LoginView } from './components/LoginView';
 import { UserManager } from './components/UserManager';
 import { ImportView } from './components/ImportView';
 import { HelpView } from './components/HelpView';
@@ -277,7 +276,7 @@ const parseNumber = (value: any): number => {
 
 const App: React.FC = () => {
     // App State
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(true);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [mainView, setMainView] = useState<AppView>('creative_analysis');
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -323,14 +322,19 @@ const App: React.FC = () => {
                     dbTyped.getMetaApiConfig(), dbTyped.getBitacoraReports(), dbTyped.getUploadedVideos(), dbTyped.getImportHistory(), dbTyped.getPerformanceData()
                 ]);
 
-                if (loadedUsers.length === 0) {
+                let usersList = loadedUsers;
+                if (usersList.length === 0) {
                     Logger.warn('No users found in DB. Creating default Admin user.');
-                    const defaultAdmin: User = { id: crypto.randomUUID(), username: 'Admin', password: 'Admin', role: 'admin' };
-                    setUsers([defaultAdmin]);
-                    await dbTyped.saveUsers([defaultAdmin]);
-                } else {
-                    setUsers(loadedUsers);
+                    const defaultAdmin: User = {
+                        id: crypto.randomUUID(),
+                        username: 'Admin',
+                        password: 'Admin',
+                        role: 'admin'
+                    };
+                    usersList = [defaultAdmin];
+                    await dbTyped.saveUsers(usersList);
                 }
+                setUsers(usersList);
                 
                 setClients(loadedClients);
                 setLookerData(loadedLookerData);
@@ -340,13 +344,15 @@ const App: React.FC = () => {
                 setImportHistory(loadedHistory);
                 setPerformanceData(loadedPerfData);
                 
-                Logger.success(`Loaded ${loadedUsers.length} users, ${loadedClients.length} clients, and data for ${Object.keys(loadedLookerData).length} accounts.`);
+                Logger.success(`Loaded ${usersList.length} users, ${loadedClients.length} clients, and data for ${Object.keys(loadedLookerData).length} accounts.`);
 
-                if (loggedInUser && (loadedUsers.length > 0 ? loadedUsers : [ { id: crypto.randomUUID(), username: 'Admin', password: 'Admin', role: 'admin' } ]).some(u => u.id === loggedInUser.id)) {
-                    Logger.info(`Found logged in user: ${loggedInUser.username}`);
-                    setCurrentUser(loggedInUser);
-                    setIsLoggedIn(true);
-                }
+                const loginUser = loggedInUser && usersList.some(u => u.id === loggedInUser.id)
+                    ? loggedInUser
+                    : usersList[0];
+                Logger.info(`Auto login as ${loginUser.username}`);
+                setCurrentUser(loginUser);
+                setIsLoggedIn(true);
+                dbTyped.saveLoggedInUser(loginUser);
             } catch (error) {
                 const message = error instanceof Error ? error.message : 'Unknown DB error';
                 Logger.error('Failed to load data from database.', { error: message });

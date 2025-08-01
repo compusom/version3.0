@@ -14,6 +14,7 @@ This contains everything you need to run your app locally.
    (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`).
 3. Run the app:
    `npm run dev`
+4. The app automatically signs in with the first user (default `Admin`/`Admin`).
 
 ## Reset Data
 
