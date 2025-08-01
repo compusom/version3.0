@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal } from './Modal';
 
 interface DbCreds {
@@ -19,6 +19,23 @@ export const DbCredentialsModal: React.FC<Props> = ({ isOpen, onClose, onSave })
     const [database, setDatabase] = useState('');
     const [user, setUser] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (isOpen) {
+            setError('');
+            fetch('/api/get-credentials')
+                .then(r => r.json())
+                .then(c => {
+                    if (c.host) {
+                        setHost(c.host);
+                        setDatabase(c.database || '');
+                        setUser(c.user || '');
+                    }
+                })
+                .catch(() => setError('No se pudieron cargar las credenciales actuales'));
+        }
+    }, [isOpen]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,6 +47,9 @@ export const DbCredentialsModal: React.FC<Props> = ({ isOpen, onClose, onSave })
             <div className="bg-brand-surface rounded-lg shadow-xl p-6 w-full max-w-md">
                 <h2 className="text-xl font-bold mb-4">Credenciales de la Base de Datos</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {error && (
+                        <p className="text-sm text-red-400 text-center">{error}</p>
+                    )}
                     <input type="text" placeholder="Host" value={host} onChange={e=>setHost(e.target.value)} className="w-full bg-brand-bg border border-brand-border rounded-md p-2" required />
                     <input type="text" placeholder="Database" value={database} onChange={e=>setDatabase(e.target.value)} className="w-full bg-brand-bg border border-brand-border rounded-md p-2" required />
                     <input type="text" placeholder="Usuario" value={user} onChange={e=>setUser(e.target.value)} className="w-full bg-brand-bg border border-brand-border rounded-md p-2" required />
