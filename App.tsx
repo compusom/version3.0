@@ -276,7 +276,6 @@ const parseNumber = (value: any): number => {
 
 const App: React.FC = () => {
     // App State
-    const [isLoggedIn, setIsLoggedIn] = useState(true);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [mainView, setMainView] = useState<AppView>('creative_analysis');
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -351,7 +350,6 @@ const App: React.FC = () => {
                     : usersList[0];
                 Logger.info(`Auto login as ${loginUser.username}`);
                 setCurrentUser(loginUser);
-                setIsLoggedIn(true);
                 dbTyped.saveLoggedInUser(loginUser);
             } catch (error) {
                 const message = error instanceof Error ? error.message : 'Unknown DB error';
@@ -643,18 +641,6 @@ ${demographicSummary || '  - No disponible'}
         }
     };
 
-    const handleLogin = (username: string, pass: string): boolean => {
-        const foundUser = users.find(u => u.username === username && u.password === pass);
-        if (foundUser) {
-            Logger.success(`User login successful: ${username}`);
-            setCurrentUser(foundUser);
-            setIsLoggedIn(true);
-            dbTyped.saveLoggedInUser(foundUser);
-            return true;
-        }
-        Logger.warn(`User login failed for username: ${username}`);
-        return false;
-    };
 
     const handleLogout = () => {
         Logger.info(`User logout attempted: ${currentUser?.username}`);
