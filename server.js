@@ -1,9 +1,24 @@
 import express from 'express';
 import { Client } from 'pg';
 import https from 'https';
+import multer from 'multer';
+import fs from 'fs';
+import { setFtpCredentials, uploadFile } from './lib/ftpClient.ts';
 
 const app = express();
 app.use(express.json());
+const upload = multer({ dest: 'uploads/' });
+
+let ftpConfig = {
+  host: process.env.FTP_HOST || null,
+  port: process.env.FTP_PORT ? parseInt(process.env.FTP_PORT) : 21,
+  user: process.env.FTP_USER || null,
+  password: process.env.FTP_PASS || null
+};
+
+if (ftpConfig.host && ftpConfig.user && ftpConfig.password) {
+  setFtpCredentials(ftpConfig);
+}
 
 let dbClient = null;
 let connectionError = null;
@@ -78,6 +93,13 @@ app.post('/api/set-credentials', async (req, res) => {
   else res.status(500).json({ success: false, error: connectionError });
 });
 
+app.post('/api/set-ftp-credentials', (req, res) => {
+  const { host, port, user, password } = req.body;
+  ftpConfig = { host, port: port ? parseInt(port) : 21, user, password };
+  setFtpCredentials(ftpConfig);
+  res.json({ success: true });
+});
+
 app.get('/api/server-ip', async (req, res) => {
   try {
     if (!serverIp) {
@@ -123,6 +145,19 @@ app.delete('/api/kv/:key', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  const localPath = req.file.path;
+  try {
+    await uploadFile(localPath, req.file.originalname);
+    fs.unlink(localPath, () => {});
+    res.json({ success: true });
+  } catch (err) {
+    fs.unlink(localPath, () => {});
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
