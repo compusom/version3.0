@@ -78,6 +78,7 @@ export const DbConnectionView: React.FC = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(c)
             });
+
             const r = await fetch('/api/test-ftp');
             if (r.ok) {
                 setFtpConnected(true);
@@ -87,6 +88,7 @@ export const DbConnectionView: React.FC = () => {
                 setFtpConnected(false);
                 setFtpError(d.error || 'Error');
             }
+
         } finally {
             setShowFtpCreds(false);
         }
