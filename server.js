@@ -163,6 +163,16 @@ app.delete('/api/kv/:key', async (req, res) => {
   }
 });
 
+app.post('/api/factory-reset', async (req, res) => {
+  if (!dbClient) return res.status(500).json({ error: 'DB not connected' });
+  try {
+    await dbClient.query('DELETE FROM kv_store');
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/upload', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const localPath = req.file.path;

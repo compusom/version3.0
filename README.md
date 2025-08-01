@@ -17,7 +17,11 @@ This contains everything you need to run your app locally.
 
 If you need to wipe all stored data and logs, open the **Control Panel** screen
 and use the **Factory Reset** button. This will clear all local tables, remove
-logs and attempt to delete the same data on the remote server.
+
+logs and attempt to delete the same data on the remote server. To allow
+re-importing files that were previously uploaded, use the **Reiniciar Cache**
+button found in the same section.
+
 
 ## Versioning
 
