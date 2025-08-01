@@ -5,7 +5,7 @@ import { APP_VERSION, APP_BUILD } from '../version';
 interface NavbarProps {
     currentView: AppView;
     onNavigate: (view: AppView) => void;
-    currentUser: User;
+    currentUser: User | null;
     onLogout: () => void;
 }
 
@@ -26,13 +26,22 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate, current
         { view: 'settings', label: 'Configuración', adminOnly: false },
     ];
 
+    if (!currentUser) {
+        return (
+            <nav className="bg-brand-surface p-4 rounded-lg shadow-md mb-8 flex justify-between items-center">
+                <span className="text-brand-text font-bold">Mi Aplicación</span>
+                <span className="text-sm text-brand-text-secondary">Cargando...</span>
+            </nav>
+        );
+    }
+
     return (
         <nav className="bg-brand-surface p-4 rounded-lg shadow-md mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
                 {navItems.map(item => {
                     if (item.adminOnly && currentUser.role !== 'admin') return null;
                     return (
-                        <button 
+                        <button
                             key={item.view}
                             onClick={() => onNavigate(item.view)}
                             className={`font-semibold transition-colors ${currentView === item.view ? 'text-brand-primary' : 'text-brand-text-secondary hover:text-brand-text'}`}
