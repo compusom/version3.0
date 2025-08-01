@@ -170,8 +170,7 @@ const db = {
 
         if (dbConnectionStatus.connected) {
             try {
-                const res = await fetch(`${API_BASE}/kv/clients`, { method: 'DELETE' });
-                // ignore result
+                await fetch(`${API_BASE}/factory-reset`, { method: 'POST' });
             } catch {}
         }
 

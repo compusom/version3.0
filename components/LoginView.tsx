@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { DbCredentialsModal } from './DbCredentialsModal';
+import { FtpCredentialsModal } from './FtpCredentialsModal';
 
 import { APP_VERSION, APP_BUILD } from '../version';
 
@@ -18,6 +19,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
     const [dbConnected, setDbConnected] = useState<boolean | null>(null);
     const [dbError, setDbError] = useState('');
     const [showCreds, setShowCreds] = useState(false);
+    const [showFtpCreds, setShowFtpCreds] = useState(false);
+    const [ftpConnected, setFtpConnected] = useState<boolean | null>(null);
+    const [ftpError, setFtpError] = useState('');
 
     useEffect(() => {
         fetch('/api/server-ip')
@@ -37,6 +41,21 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
         } catch (e) {
             setDbConnected(false);
             setDbError('No se pudo conectar con la API.');
+        }
+
+        try {
+            const res = await fetch('/api/test-ftp');
+            if (res.ok) {
+                setFtpConnected(true);
+                setFtpError('');
+            } else {
+                const d = await res.json();
+                setFtpConnected(false);
+                setFtpError(d.error || 'Error');
+            }
+        } catch (e) {
+            setFtpConnected(false);
+            setFtpError('No se pudo conectar al FTP.');
         }
     };
 
@@ -63,6 +82,27 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
         }
     };
 
+    const updateFtpCreds = async (c: { host: string; port: string; user: string; password: string }) => {
+        try {
+            await fetch('/api/set-ftp-credentials', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(c)
+            });
+            const res = await fetch('/api/test-ftp');
+            if (res.ok) {
+                setFtpConnected(true);
+                setFtpError('');
+            } else {
+                const d = await res.json();
+                setFtpConnected(false);
+                setFtpError(d.error || 'Error');
+            }
+        } finally {
+            setShowFtpCreds(false);
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
@@ -83,6 +123,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
     return (
         <div className="flex items-center justify-center min-h-screen">
             <DbCredentialsModal isOpen={showCreds} onClose={() => setShowCreds(false)} onSave={updateCreds} />
+            <FtpCredentialsModal isOpen={showFtpCreds} onClose={() => setShowFtpCreds(false)} onSave={updateFtpCreds} />
             <div className="w-full max-w-sm mx-auto bg-brand-surface rounded-lg p-8 shadow-2xl animate-fade-in">
                 <div className="text-center mb-4">
                     <h1 className="text-3xl font-bold text-brand-text">Bienvenido</h1>
@@ -96,10 +137,15 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                             <div className="mt-1 flex gap-2 justify-center">
                                 <button type="button" onClick={checkStatus} className="underline">Reintentar</button>
                                 <button type="button" onClick={() => setShowCreds(true)} className="underline">Editar credenciales</button>
+                                <button type="button" onClick={() => setShowFtpCreds(true)} className="underline">Configurar FTP</button>
                             </div>
                         </div>
                     )}
                     {dbConnected && <p className="text-xs text-green-500 mt-2">DB conectada</p>}
+                    {ftpConnected === false && (
+                        <div className="text-red-400 text-xs mt-2">Error FTP: {ftpError}</div>
+                    )}
+                    {ftpConnected && <p className="text-xs text-green-500 mt-1">FTP conectado</p>}
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
@@ -130,6 +176,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLogin }) => {
                     <div>
                         <button type="submit" className="w-full bg-brand-primary hover:bg-brand-primary-hover text-white font-bold py-3 px-4 rounded-lg shadow-md transition-colors disabled:opacity-50">
                             Iniciar Sesión
+                        </button>
+                        <button type="button" onClick={() => setShowFtpCreds(true)} className="w-full mt-2 text-xs underline text-brand-text-secondary">
+                            Configurar FTP
                         </button>
                     </div>
                 </form>
