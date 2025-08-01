@@ -12,8 +12,11 @@ This contains everything you need to run your app locally.
 2. Copy `.env.example` to `.env.local` and update the values. At a minimum you
    should provide your `GEMINI_API_KEY` and the PostgreSQL connection settings
    (`DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`).
-3. Run the app:
+
+3. Run the app (the dev script uses `vite --host` so the app is accessible across your LAN):
    `npm run dev`
+   If the PostgreSQL server is unreachable, the app falls back to local storage automatically.
+
 4. The app automatically signs in with the first user (default `Admin`/`Admin`).
 
 ## Reset Data

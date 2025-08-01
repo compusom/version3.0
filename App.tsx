@@ -357,7 +357,7 @@ const App: React.FC = () => {
                 const message = error instanceof Error ? error.message : 'Unknown DB error';
                 Logger.error('Failed to load data from database.', { error: message });
                 dbConnectionStatus.connected = false;
-                alert("Error crítico: No se pudieron cargar los datos de la base de datos.");
+                Logger.error('Critical: Failed to connect to DB. Falling back to local storage.');
             } finally {
                 setIsLoading(false);
             }
