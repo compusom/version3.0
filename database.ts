@@ -38,6 +38,19 @@ const simulateQuery = <T>(action: () => T): Promise<T> => {
     });
 };
 
+const CLEAR_ALL_KEYS = [
+    'db_clients',
+    'db_users',
+    'db_performance_data',
+    'db_looker_data',
+    'db_bitacora_reports',
+    'db_uploaded_videos',
+    'db_import_history',
+    'db_processed_files_hashes',
+    'current_client_id',
+    'logged_in_user'
+];
+
 const db = {
     async select<T>(table: string, defaultValue: T): Promise<T> {
         // Allow reading config before connection is established
@@ -128,53 +141,25 @@ const db = {
     },
 
     async clearAllData(): Promise<void> {
-        const useRemote = checkConnection();
+        checkConnection();
         console.log(`[DB] Executing: CLEAR ALL USER DATA;`);
 
-        if (dbConnectionStatus.connected) {
-
-            const keysToClear = [
-                'db_clients',
-                'db_users',
-                'db_performance_data',
-                'db_looker_data',
-                'db_bitacora_reports',
-                'db_uploaded_videos',
-                'db_import_history', // Added import history
-                'db_processed_files_hashes',
-                'current_client_id',
-                'logged_in_user'
-            ];
-            for (const key of keysToClear) {
-                try {
-                    await fetch(`${API_BASE}/kv/${key}`, { method: 'DELETE' });
-                } catch (e) {
-                    console.warn(`[DB] Failed clearing ${key} remotely`, e);
-                }
+        for (const key of CLEAR_ALL_KEYS) {
+            try {
+                await fetch(`${API_BASE}/kv/${key}`, { method: 'DELETE' });
+            } catch (e) {
+                console.warn(`[DB] Failed clearing ${key} remotely`, e);
             }
         }
 
         return simulateQuery(() => {
-            const keysToClear = [
-                'db_clients',
-                'db_users',
-                'db_performance_data',
-                'db_looker_data',
-                'db_bitacora_reports',
-                'db_uploaded_videos',
-                'db_import_history',
-                'db_processed_files_hashes',
-                'current_client_id',
-                'logged_in_user'
-            ];
-
-            keysToClear.forEach(key => localStorage.removeItem(key));
+            CLEAR_ALL_KEYS.forEach(key => localStorage.removeItem(key));
 
             // Clear all analysis cache keys
             Object.keys(localStorage).forEach(key => {
-                 if (key.startsWith('metaAdCreativeAnalysis_')) {
+                if (key.startsWith('metaAdCreativeAnalysis_')) {
                     localStorage.removeItem(key);
-                 }
+                }
             });
         });
     },

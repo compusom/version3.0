@@ -49,7 +49,7 @@ export const ControlPanelView: React.FC = () => {
     }, [checkTableStatus]);
 
 
-    const handleClearDatabase = async () => {
+    const handleFactoryReset = async () => {
         if (!window.confirm('¿ESTÁS SEGURO? Esta acción eliminará TODA la información de la aplicación (clientes, historial, reportes, usuarios) de forma permanente. Esta acción no se puede deshacer.')) {
             return;
         }
@@ -61,6 +61,7 @@ export const ControlPanelView: React.FC = () => {
         try {
             addLog('☢️ Iniciando protocolo de limpieza de datos de la base de datos...');
             await db.clearAllData();
+            Logger.clear();
             addLog('✅ Base de datos limpiada con éxito. La aplicación se reiniciará.');
             alert('Base de datos limpiada. La aplicación se recargará.');
             window.location.reload();
@@ -129,16 +130,16 @@ export const ControlPanelView: React.FC = () => {
                 <h3 className="text-xl font-bold text-red-400">Zona de Peligro</h3>
                  <div className="bg-red-600/10 p-4 rounded-md flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div>
-                        <h4 className="font-semibold text-red-400">Limpiar Todos los Datos</h4>
+                        <h4 className="font-semibold text-red-400">Factory Reset</h4>
                         <p className="text-sm text-brand-text-secondary mt-1">
                            Elimina permanentemente todos los clientes, análisis, reportes, usuarios, etc. La aplicación volverá a su estado inicial.
                         </p>
                     </div>
                     <button
-                        onClick={handleClearDatabase}
+                        onClick={handleFactoryReset}
                         className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-colors flex-shrink-0"
                     >
-                        Limpiar Datos
+                        Factory Reset
                     </button>
                 </div>
             </div>
