@@ -13,6 +13,7 @@ export type AppView =
   | 'logs'
   | 'control_panel'
   | 'db_connection'
+  | 'ftp_connection'
   | 'help'
   | 'settings';
 

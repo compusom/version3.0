@@ -10,10 +10,27 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    const uploadToServer = async (file: File) => {
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            try {
+                await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fileName: file.name, dataUrl: reader.result })
+                });
+            } catch (e) {
+                console.error('Error uploading file', e);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
         setFileName(file.name);
+        uploadToServer(file);
         onFileUpload(file);
     };
 
@@ -28,6 +45,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload }) => {
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             const file = e.dataTransfer.files[0];
             setFileName(file.name);
+            uploadToServer(file);
             onFileUpload(file);
         }
     }, [onFileUpload]);

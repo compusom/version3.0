@@ -1,12 +1,16 @@
 import express from 'express';
 import { Client } from 'pg';
 import https from 'https';
+import { Client as FtpClient } from 'basic-ftp';
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 
 let dbClient = null;
 let connectionError = null;
+
+let ftpClient = null;
+let ftpError = null;
 
 function fetchPublicIp() {
   return new Promise((resolve, reject) => {
@@ -60,6 +64,26 @@ async function connectToDb(config) {
   }
 }
 
+async function connectToFtp(config) {
+  const client = new FtpClient();
+  try {
+    await client.access({
+      host: config.host,
+      port: Number(config.port) || 21,
+      user: config.user,
+      password: config.password,
+      secure: false
+    });
+    ftpClient = client;
+    ftpError = null;
+    console.log('Connected to FTP');
+  } catch (err) {
+    ftpClient = null;
+    ftpError = err.message;
+    console.error('FTP connection failed:', err.message);
+  }
+}
+
 await connectToDb({
   host: process.env.DB_HOST || 'Pulseweb.com.ar',
   database: process.env.DB_NAME || 'dbzonjl9ktp0wu',
@@ -67,8 +91,26 @@ await connectToDb({
   password: process.env.DB_PASS || 'Cataclismoss'
 });
 
+await connectToFtp({
+  host: process.env.FTP_HOST || 'localhost',
+  port: process.env.FTP_PORT || '21',
+  user: process.env.FTP_USER || 'anonymous',
+  password: process.env.FTP_PASS || 'anonymous'
+});
+
 app.get('/api/status', (req, res) => {
   res.json({ connected: !!dbClient, error: connectionError });
+});
+
+app.get('/api/ftp-status', (req, res) => {
+  res.json({ connected: !!ftpClient, error: ftpError });
+});
+
+app.post('/api/set-ftp-credentials', async (req, res) => {
+  const { host, port, user, password } = req.body;
+  await connectToFtp({ host, port, user, password });
+  if (ftpClient) res.json({ success: true });
+  else res.status(500).json({ success: false, error: ftpError });
 });
 
 app.post('/api/set-credentials', async (req, res) => {
@@ -120,6 +162,20 @@ app.delete('/api/kv/:key', async (req, res) => {
   const { key } = req.params;
   try {
     await dbClient.query('DELETE FROM kv_store WHERE key=$1', [key]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/upload', async (req, res) => {
+  if (!ftpClient) return res.status(500).json({ error: 'FTP not connected' });
+  const { fileName, dataUrl } = req.body;
+  if (!fileName || !dataUrl) return res.status(400).json({ error: 'Invalid payload' });
+  const base64 = dataUrl.split(',')[1] || dataUrl;
+  const buffer = Buffer.from(base64, 'base64');
+  try {
+    await ftpClient.uploadFrom(buffer, fileName);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
