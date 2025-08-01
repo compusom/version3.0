@@ -459,6 +459,10 @@ export const PerformanceView: React.FC<PerformanceViewProps> = ({ clients, getPe
     const handleVideoSave = async (adName: string, videoFile: File) => {
         if (!selectedClient) return;
         try {
+            const form = new FormData();
+            form.append('file', videoFile);
+            const res = await fetch('/api/upload', { method: 'POST', body: form });
+            if (!res.ok) throw new Error('Error al subir archivo');
             const dataUrl = await fileToBase64(videoFile);
             const newVideo: UploadedVideo = { id: `${selectedClient.id}_${adName}`, clientId: selectedClient.id, adName: adName, videoFileName: videoFile.name, dataUrl: dataUrl };
             const updatedVideos = [...uploadedVideos.filter(v => v.id !== newVideo.id), newVideo];

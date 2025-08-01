@@ -13,6 +13,21 @@ export function setFtpCredentials(creds: FtpCredentials) {
     credentials = creds;
 }
 
+export async function checkFtpConnection(): Promise<void> {
+    if (!credentials) throw new Error('FTP credentials not configured');
+    const client = new Client();
+    try {
+        await client.access({
+            host: credentials.host,
+            port: credentials.port,
+            user: credentials.user,
+            password: credentials.password,
+        });
+    } finally {
+        client.close();
+    }
+}
+
 export async function uploadFile(localPath: string, remotePath: string): Promise<void> {
     if (!credentials) throw new Error('FTP credentials not configured');
 
