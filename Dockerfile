@@ -12,8 +12,8 @@ RUN npm install
 # Copiar el resto del código de la aplicación
 COPY . .
 
-# El servidor de Express corre en el puerto 3000 por defecto
-EXPOSE 3000
+# El servidor de Express corre en el puerto 3001 por defecto
+EXPOSE 3001
 
 # El comando para iniciar la aplicación
 CMD ["npm", "start"]

@@ -3,7 +3,10 @@ import { Client } from 'pg';
 import https from 'https';
 import multer from 'multer';
 import fs from 'fs';
-import { setFtpCredentials, uploadFile, checkFtpConnection } from './lib/ftpClient.ts';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+dotenv.config();
+import { setFtpCredentials, uploadFile, checkFtpConnection } from './lib/ftpClient.js';
 
 const app = express();
 app.use(express.json());
@@ -22,6 +25,12 @@ if (ftpConfig.host && ftpConfig.user && ftpConfig.password) {
 
 let dbClient = null;
 let connectionError = null;
+let dbConfig = {
+  host: process.env.DB_HOST || 'localhost',
+  database: process.env.DB_NAME || 'postgres',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASS || ''
+};
 
 function fetchPublicIp() {
   return new Promise((resolve, reject) => {
@@ -75,12 +84,7 @@ async function connectToDb(config) {
   }
 }
 
-await connectToDb({
-  host: process.env.DB_HOST || 'localhost',
-  database: process.env.DB_NAME || 'postgres',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASS || ''
-});
+await connectToDb(dbConfig);
 
 app.get('/api/status', (req, res) => {
   res.json({ connected: !!dbClient, error: connectionError });
@@ -88,7 +92,8 @@ app.get('/api/status', (req, res) => {
 
 app.post('/api/set-credentials', async (req, res) => {
   const { host, database, user, password } = req.body;
-  await connectToDb({ host, database, user, password });
+  dbConfig = { host, database, user, password };
+  await connectToDb(dbConfig);
   if (dbClient) res.json({ success: true });
   else res.status(500).json({ success: false, error: connectionError });
 });
@@ -98,6 +103,12 @@ app.post('/api/set-ftp-credentials', (req, res) => {
   ftpConfig = { host, port: port ? parseInt(port) : 21, user, password };
   setFtpCredentials(ftpConfig);
   res.json({ success: true });
+});
+
+app.get('/api/get-credentials', (req, res) => {
+  if (!dbConfig.host) return res.json({});
+  const { password, ...safe } = dbConfig;
+  res.json(safe);
 });
 
 app.get('/api/get-ftp-credentials', (req, res) => {
