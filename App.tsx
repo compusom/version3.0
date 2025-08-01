@@ -657,10 +657,8 @@ ${demographicSummary || '  - No disponible'}
     };
 
     const handleLogout = () => {
-        Logger.info(`User logout: ${currentUser?.username}`);
-        setIsLoggedIn(false);
-        setCurrentUser(null);
-        dbTyped.saveLoggedInUser(null);
+        Logger.info(`User logout attempted: ${currentUser?.username}`);
+        // Login is disabled, so logout simply returns to the main view
         setMainView('creative_analysis');
     };
 
@@ -704,10 +702,6 @@ ${demographicSummary || '  - No disponible'}
         )
     }
 
-    if (!isLoggedIn) {
-        return <LoginView onLogin={handleLogin} />;
-    }
-    
     return renderMainContent();
 };
 

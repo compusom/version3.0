@@ -76,10 +76,10 @@ async function connectToDb(config) {
 }
 
 await connectToDb({
-  host: process.env.DB_HOST || 'Pulseweb.com.ar',
-  database: process.env.DB_NAME || 'dbzonjl9ktp0wu',
-  user: process.env.DB_USER || 'uizkbuhryctw3',
-  password: process.env.DB_PASS || 'Cataclismoss'
+  host: process.env.DB_HOST || 'localhost',
+  database: process.env.DB_NAME || 'postgres',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASS || ''
 });
 
 app.get('/api/status', (req, res) => {
